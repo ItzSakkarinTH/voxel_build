@@ -3,7 +3,7 @@ import { HandLandmarker, FilesetResolver } from "@mediapipe/tasks-vision"
 import type { Landmark } from "../src/types/hand"
 
 type Props = {
-  onHandMove: (landmarks: Landmark[]) => void
+  onHandMove: (hands: Landmark[][]) => void
   onColorSelect: (color: number) => void
   selectedColor: number
   fullScreen?: boolean
@@ -54,7 +54,7 @@ export default function HandTracker({ onHandMove, onColorSelect, selectedColor, 
             delegate: "GPU"
           },
           runningMode: "VIDEO",
-          numHands: 1
+          numHands: 2
         })
 
         if (!active) {
@@ -184,54 +184,50 @@ export default function HandTracker({ onHandMove, onColorSelect, selectedColor, 
                 })
 
                 if (results.landmarks.length > 0) {
-                  const landmarks = results.landmarks[0]
-                  propsRef.current.onHandMove(landmarks)
+                  propsRef.current.onHandMove(results.landmarks)
 
-                  const index = landmarks[8]
-                  const thumb = landmarks[4]
-                  const fingerPos = {
-                    x: (1 - index.x) * canvasRef.current.width,
-                    y: index.y * canvasRef.current.height
-                  }
-                  const thumbPos = {
-                    x: (1 - thumb.x) * canvasRef.current.width,
-                    y: thumb.y * canvasRef.current.height
-                  }
+                  results.landmarks.forEach((landmarks) => {
+                    const index = landmarks[8]
+                    const thumb = landmarks[4]
+                    const fingerPos = {
+                      x: (1 - index.x) * canvasRef.current!.width,
+                      y: index.y * canvasRef.current!.height
+                    }
+                    const thumbPos = {
+                      x: (1 - thumb.x) * canvasRef.current!.width,
+                      y: thumb.y * canvasRef.current!.height
+                    }
 
-                  const dist = Math.hypot(index.x - thumb.x, index.y - thumb.y)
+                    const dist = Math.hypot(index.x - thumb.x, index.y - thumb.y)
 
-                  // Open hand detection: fingers extended (tip.y < base.y)
-                  const isOpenHandState = landmarks[8].y < landmarks[5].y &&
-                    landmarks[12].y < landmarks[9].y &&
-                    landmarks[16].y < landmarks[13].y &&
-                    landmarks[20].y < landmarks[17].y
+                    const isOpenHandState = landmarks[8].y < landmarks[5].y &&
+                      landmarks[12].y < landmarks[9].y &&
+                      landmarks[16].y < landmarks[13].y &&
+                      landmarks[20].y < landmarks[17].y
 
-                  const selColorHex = `#${propsRef.current.selectedColor.toString(16).padStart(6, "0")}`
+                    const selColorHex = `#${propsRef.current.selectedColor.toString(16).padStart(6, "0")}`
 
-                  if (dist < 0.1) {
-                    emitSparks(fingerPos.x, fingerPos.y, selColorHex, 5)
-                    emitSparks(thumbPos.x, thumbPos.y, selColorHex, 3)
-                    // Mix in white sparks
-                    if (Math.random() > 0.5) {
+                    if (dist < 0.1) {
+                      emitSparks(fingerPos.x, fingerPos.y, selColorHex, 5)
+                      emitSparks(thumbPos.x, thumbPos.y, selColorHex, 3)
+                      if (Math.random() > 0.5) {
+                        emitSparks(fingerPos.x, fingerPos.y, "#ffffff", 2)
+                      }
+                    }
+                    if (isOpenHandState && dist >= 0.1) {
+                      emitSparks(fingerPos.x, fingerPos.y, "#ff3333", 4)
+                      const mPos = {
+                        x: (1 - landmarks[12].x) * canvasRef.current!.width,
+                        y: landmarks[12].y * canvasRef.current!.height
+                      }
+                      emitSparks(mPos.x, mPos.y, "#ff3333", 4)
                       emitSparks(fingerPos.x, fingerPos.y, "#ffffff", 2)
                     }
-                  }
-                  if (isOpenHandState && dist >= 0.1) {
-                    // Open hand effect: more sparks from all finger tips (using middle finger pos as center)
-                    emitSparks(fingerPos.x, fingerPos.y, "#ff3333", 4)
-                    const mPos = {
-                      x: (1 - landmarks[12].x) * canvasRef.current!.width,
-                      y: landmarks[12].y * canvasRef.current!.height
+
+                    if (Math.random() > 0.6) {
+                      emitSparks(fingerPos.x, fingerPos.y, "#ffffff", 1)
                     }
-                    emitSparks(mPos.x, mPos.y, "#ff3333", 4)
-                    emitSparks(fingerPos.x, fingerPos.y, "#ffffff", 2)
-                  }
-
-                  // Constant pulse
-                  if (Math.random() > 0.6) {
-                    emitSparks(fingerPos.x, fingerPos.y, "#ffffff", 1)
-                  }
-
+                  })
                 }
               } catch {
                 // ignore

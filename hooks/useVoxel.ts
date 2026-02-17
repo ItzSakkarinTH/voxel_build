@@ -3,12 +3,11 @@ import * as THREE from "three"
 export function createVoxelScene(container: HTMLDivElement) {
   const scene = new THREE.Scene()
 
-  // Use window dimensions if container is not ready
   const width = container.clientWidth || window.innerWidth
   const height = container.clientHeight || window.innerHeight
 
   const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000)
-  camera.position.set(0, 0, 20)
+  camera.position.set(0, 0, 25)
   camera.lookAt(0, 0, 0)
 
   const renderer = new THREE.WebGLRenderer({
@@ -18,15 +17,16 @@ export function createVoxelScene(container: HTMLDivElement) {
   renderer.setSize(width, height)
   renderer.setClearColor(0x000000, 0)
   renderer.setPixelRatio(window.devicePixelRatio)
-
   container.appendChild(renderer.domElement)
 
-  // SIMPLEST POSSIBLE LIGHTING
+  // Rotation Pivot Group
+  const voxelGroup = new THREE.Group()
+  scene.add(voxelGroup)
+
   scene.add(new THREE.AmbientLight(0xffffff, 1))
   const sun = new THREE.DirectionalLight(0xffffff, 1)
   sun.position.set(5, 5, 5)
   scene.add(sun)
-
 
   const cursorGeo = new THREE.BoxGeometry(1, 1, 1)
   const cursorMat = new THREE.MeshStandardMaterial({
@@ -44,7 +44,8 @@ export function createVoxelScene(container: HTMLDivElement) {
   animate()
 
   function addVoxel(x: number, y: number, z: number, color: number = 0x00ffcc) {
-    const isDuplicate = scene.children.some(
+    // Check duplication inside group
+    const isDuplicate = voxelGroup.children.some(
       (child) =>
         child instanceof THREE.Mesh &&
         child.userData.isVoxel &&
@@ -61,11 +62,11 @@ export function createVoxelScene(container: HTMLDivElement) {
     )
     cube.position.set(Math.round(x), Math.round(y), Math.round(z))
     cube.userData.isVoxel = true
-    scene.add(cube)
+    voxelGroup.add(cube)
   }
 
   function removeVoxel(x: number, y: number, z: number) {
-    const voxel = scene.children.find(
+    const voxel = voxelGroup.children.find(
       (child) =>
         child instanceof THREE.Mesh &&
         child.userData.isVoxel &&
@@ -73,14 +74,19 @@ export function createVoxelScene(container: HTMLDivElement) {
         Math.round(child.position.y) === Math.round(y) &&
         Math.round(child.position.z) === Math.round(z)
     )
-    if (voxel) scene.remove(voxel)
+    if (voxel) voxelGroup.remove(voxel)
   }
 
   function setCursor(x: number, y: number, z: number) {
     cursor.position.set(x, y, z)
   }
 
-  // Handle Resize
+  // Multi-hand Rotation
+  function rotateScene(deltaX: number, deltaY: number) {
+    voxelGroup.rotation.y += deltaX
+    voxelGroup.rotation.x += deltaY
+  }
+
   window.addEventListener("resize", () => {
     const w = window.innerWidth
     const h = window.innerHeight
@@ -89,5 +95,5 @@ export function createVoxelScene(container: HTMLDivElement) {
     renderer.setSize(w, h)
   })
 
-  return { addVoxel, removeVoxel, setCursor }
+  return { addVoxel, removeVoxel, setCursor, rotateScene }
 }

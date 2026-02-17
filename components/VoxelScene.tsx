@@ -5,7 +5,8 @@ type Props = {
   onReady: (
     addVoxel: (x: number, y: number, z: number, color?: number) => void,
     removeVoxel: (x: number, y: number, z: number) => void,
-    setCursor: (x: number, y: number, z: number) => void
+    setCursor: (x: number, y: number, z: number) => void,
+    rotateScene: (dx: number, dy: number) => void
   ) => void
 }
 
@@ -18,7 +19,7 @@ export default function VoxelScene({ onReady }: Props) {
       containerRef.current.innerHTML = ""
 
       const actions = createVoxelScene(containerRef.current)
-      onReady(actions.addVoxel, actions.removeVoxel, actions.setCursor)
+      onReady(actions.addVoxel, actions.removeVoxel, actions.setCursor, actions.rotateScene)
     }
   }, [onReady])
 

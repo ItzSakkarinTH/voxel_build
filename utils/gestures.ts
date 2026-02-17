@@ -12,15 +12,20 @@ export function isPinching(landmarks: Landmark[]): boolean {
   return dist < 0.08
 }
 
-export function isFist(landmarks: Landmark[]): boolean {
-  // Check if finger tips (8, 12, 16, 20) are below their mid-joints (6, 10, 14, 18)
-  // In MediaPipe y increases downwards, so tip.y > joint.y means the finger is curled
-  const isIndexCurled = landmarks[8].y > landmarks[6].y
-  const isMiddleCurled = landmarks[12].y > landmarks[10].y
-  const isRingCurled = landmarks[16].y > landmarks[14].y
-  const isPinkyCurled = landmarks[20].y > landmarks[18].y
+export function isOpenHand(landmarks: Landmark[]): boolean {
+  // Check if finger tips (8, 12, 16, 20) are well above their base joints (5, 9, 13, 17)
+  // In MediaPipe y increases downwards, so tip.y < base.y means the finger is extended
+  const isIndexExtended = landmarks[8].y < landmarks[5].y
+  const isMiddleExtended = landmarks[12].y < landmarks[9].y
+  const isRingExtended = landmarks[16].y < landmarks[13].y
+  const isPinkyExtended = landmarks[20].y < landmarks[17].y
 
-  // For a fist, most fingers should be curled
-  return isIndexCurled && isMiddleCurled && isRingCurled && isPinkyCurled
+  // The thumb tip (4) should also be relatively far from the index base (5)
+  const thumbTip = landmarks[4]
+  const indexBase = landmarks[5]
+  const thumbDistance = Math.hypot(thumbTip.x - indexBase.x, thumbTip.y - indexBase.y)
+  const isThumbExtended = thumbDistance > 0.1
+
+  return isIndexExtended && isMiddleExtended && isRingExtended && isPinkyExtended && isThumbExtended
 }
 

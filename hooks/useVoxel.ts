@@ -27,16 +27,6 @@ export function createVoxelScene(container: HTMLDivElement) {
   sun.position.set(5, 5, 5)
   scene.add(sun)
 
-  // VIBRANT RED BOX - DEAD CENTER
-  const boxGeo = new THREE.BoxGeometry(4, 4, 4)
-  const boxMat = new THREE.MeshStandardMaterial({ color: 0xff0000 })
-  const testBox = new THREE.Mesh(boxGeo, boxMat)
-  scene.add(testBox)
-
-  // BRIGHT CYAN GRID
-  const grid = new THREE.GridHelper(40, 40, 0x00ffff, 0x333333)
-  grid.rotation.x = Math.PI / 2
-  scene.add(grid)
 
   const cursorGeo = new THREE.BoxGeometry(1, 1, 1)
   const cursorMat = new THREE.MeshStandardMaterial({
@@ -49,8 +39,6 @@ export function createVoxelScene(container: HTMLDivElement) {
 
   function animate() {
     requestAnimationFrame(animate)
-    testBox.rotation.y += 0.02
-    testBox.rotation.x += 0.01
     renderer.render(scene, camera)
   }
   animate()

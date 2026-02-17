@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react"
 import HandTracker from "../components/HandTracker"
 import VoxelScene from "../components/VoxelScene"
-import { isPinching, isFist } from "../utils/gestures"
+import { isPinching, isOpenHand } from "../utils/gestures"
 import type { Landmark } from "./types/hand"
 
 export default function App() {
@@ -20,10 +20,10 @@ export default function App() {
 
       const indexTip = landmarks[8]
       const pinchAdd = isPinching(landmarks)
-      const fistRemove = isFist(landmarks)
+      const openRemove = isOpenHand(landmarks)
 
       if (pinchAdd) setPinchState("add")
-      else if (fistRemove) setPinchState("remove")
+      else if (openRemove) setPinchState("remove")
       else setPinchState("none")
 
       const x = (0.5 - indexTip.x) * 40
@@ -34,7 +34,7 @@ export default function App() {
 
       if (pinchAdd) {
         actions.addVoxel(x, y, z, selectedColor)
-      } else if (fistRemove) {
+      } else if (openRemove) {
         actions.removeVoxel(x, y, z)
       }
     },
@@ -69,8 +69,7 @@ export default function App() {
         position: "absolute",
         inset: 0,
         zIndex: 10,
-        pointerEvents: "none",
-        border: "4px solid yellow"
+        pointerEvents: "none"
       }}>
         <VoxelScene onReady={onReady} />
       </div>
@@ -87,7 +86,7 @@ export default function App() {
           backdropFilter: "blur(15px)"
         }}>
           <h1 style={{ color: "#00ffcc", margin: "0 0 10px 0", fontSize: "1.6rem" }}>AR CORE ENGINE</h1>
-          <p style={{ fontSize: "0.85rem", opacity: 0.7 }}>👌 PINCH to PLACE | ✊ FIST to REMOVE</p>
+          <p style={{ fontSize: "0.85rem", opacity: 0.7 }}>👌 PINCH to PLACE | 🖐️ OPEN HAND to REMOVE</p>
 
           <div style={{
             marginTop: "20px",
